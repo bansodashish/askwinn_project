@@ -34,7 +34,7 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
   
   try {
     genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-    model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+    model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" })
   } catch (error) {
     console.error('Failed to initialize Gemini AI:', error)
   }
