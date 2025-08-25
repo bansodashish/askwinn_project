@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Calendar, User, DollarSign, MapPin, Palette } from 'lucide-react'
 import type { RequirementCategory } from '../App'
 
@@ -40,6 +40,31 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
   const [currentStep, setCurrentStep] = useState(1)
   const totalSteps = 3
 
+  // Reset form when modal opens
+  const resetForm = () => {
+    setFormData({
+      eventType: '',
+      eventDate: '',
+      venue: '',
+      budget: '',
+      style: '',
+      size: '',
+      color: '',
+      specialRequests: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: ''
+    });
+    setCurrentStep(1);
+  };
+
+  // Reset form when component mounts or category changes
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen, category]);
+
   const getFormFields = (category: RequirementCategory) => {
     switch (category) {
       case 'wedding':
@@ -66,18 +91,67 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
   const formConfig = getFormFields(category)
 
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    console.log(`Updating field ${field} with value:`, value); // Debug logging
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log('Updated form data:', updated); // Debug logging
+      return updated;
+    });
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validation check
+    if (!formData.eventDate) {
+      alert('Please select an event date')
+      return
+    }
+    
+    if (!formData.venue.trim()) {
+      alert('Please enter a venue or location')
+      return
+    }
+    
     console.log('Form submitted:', formData)
     // Here you would typically send the data to your backend
-    alert('Thank you! Your requirements have been submitted. We\'ll contact you soon with personalized recommendations.')
+    alert(`Thank you! Your ${category} requirements have been submitted.\n\nEvent Date: ${formData.eventDate}\nVenue: ${formData.venue}\n\nWe'll contact you soon with personalized recommendations.`)
     onClose()
   }
 
   const nextStep = () => {
+    // Validation for step 1 - Event Details
+    if (currentStep === 1) {
+      if (!formData.eventType) {
+        alert('Please select an event type')
+        return
+      }
+      if (!formData.eventDate) {
+        alert('Please select an event date')
+        return
+      }
+      if (!formData.venue.trim()) {
+        alert('Please enter a venue or location')
+        return
+      }
+    }
+    
+    // Validation for step 2 - Style Preferences
+    if (currentStep === 2) {
+      if (!formData.style) {
+        alert('Please select a style preference')
+        return
+      }
+      if (!formData.size.trim()) {
+        alert('Please enter a size')
+        return
+      }
+      if (!formData.budget) {
+        alert('Please select a budget range')
+        return
+      }
+    }
+    
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
     }
@@ -128,18 +202,26 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
             <div className="space-y-6">
               <h4 className="text-lg font-medium text-gray-900 mb-4">Event Details</h4>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <div>
+                <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Event Type
                 </label>
                 <select
+                  id="eventType"
                   value={formData.eventType}
                   onChange={(e) => handleInputChange('eventType', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
                   required
                 >
-                  <option value="">Select event type</option>
+                  <option value="" disabled>Select event type</option>
                   {formConfig.eventTypes.map((type) => (
                     <option key={type} value={type}>{type}</option>
                   ))}
@@ -147,31 +229,35 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700 mb-2">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Event Date
                 </label>
                 <input
+                  id="eventDate"
                   type="date"
                   value={formData.eventDate}
                   onChange={(e) => handleInputChange('eventDate', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="venue" className="block text-sm font-medium text-gray-700 mb-2">
                   <MapPin className="w-4 h-4 inline mr-1" />
                   Venue/Location
                 </label>
                 <input
+                  id="venue"
                   type="text"
                   value={formData.venue}
                   onChange={(e) => handleInputChange('venue', e.target.value)}
-                  placeholder="Enter venue or location type"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter venue name, city, or location type (e.g., 'Beach Resort Miami' or 'Garden Venue')"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
                   required
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -183,17 +269,25 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               <h4 className="text-lg font-medium text-gray-900 mb-4">Style Preferences</h4>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="style" className="block text-sm font-medium text-gray-700 mb-2">
                   <Palette className="w-4 h-4 inline mr-1" />
                   Preferred Style
                 </label>
                 <select
+                  id="style"
                   value={formData.style}
                   onChange={(e) => handleInputChange('style', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
                   required
                 >
-                  <option value="">Select style</option>
+                  <option value="" disabled>Select style</option>
                   {formConfig.styles.map((style) => (
                     <option key={style} value={style}>{style}</option>
                   ))}
@@ -201,45 +295,89 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-2">
                   Size
                 </label>
-                <input
-                  type="text"
+                <select
+                  id="size"
                   value={formData.size}
                   onChange={(e) => handleInputChange('size', e.target.value)}
-                  placeholder="Enter size (e.g., XS, S, M, L, XL or specific measurements)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
                   required
-                />
+                >
+                  <option value="" disabled>Select size</option>
+                  <option value="XS">XS - Extra Small</option>
+                  <option value="S">S - Small</option>
+                  <option value="M">M - Medium</option>
+                  <option value="L">L - Large</option>
+                  <option value="XL">XL - Extra Large</option>
+                  <option value="XXL">XXL - Double Extra Large</option>
+                  <option value="Custom">Custom Size (specify in special requests)</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="color" className="block text-sm font-medium text-gray-700 mb-2">
                   <Palette className="w-4 h-4 inline mr-1" />
                   Color Preferences
                 </label>
-                <input
-                  type="text"
+                <select
+                  id="color"
                   value={formData.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
-                  placeholder="Enter preferred colors or color scheme"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
+                >
+                  <option value="">Select color preference (optional)</option>
+                  <option value="White">Classic White</option>
+                  <option value="Ivory">Ivory/Cream</option>
+                  <option value="Blush">Blush Pink</option>
+                  <option value="Champagne">Champagne/Gold</option>
+                  <option value="Rose Gold">Rose Gold</option>
+                  <option value="Sage Green">Sage Green</option>
+                  <option value="Dusty Blue">Dusty Blue</option>
+                  <option value="Lavender">Lavender</option>
+                  <option value="Burgundy">Burgundy/Wine</option>
+                  <option value="Navy">Navy Blue</option>
+                  <option value="Black">Black</option>
+                  <option value="Silver">Silver/Gray</option>
+                  <option value="Custom">Custom Color (specify in special requests)</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
                   <DollarSign className="w-4 h-4 inline mr-1" />
                   Budget Range
                 </label>
                 <select
+                  id="budget"
                   value={formData.budget}
                   onChange={(e) => handleInputChange('budget', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 appearance-none cursor-pointer"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                    paddingRight: '2.5rem'
+                  }}
                   required
                 >
-                  <option value="">Select budget range</option>
+                  <option value="" disabled>Select budget range</option>
                   {formConfig.budgetRanges.map((range) => (
                     <option key={range} value={range}>{range}</option>
                   ))}
@@ -254,11 +392,12 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               <h4 className="text-lg font-medium text-gray-900 mb-4">Contact Information</h4>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-2">
                   <User className="w-4 h-4 inline mr-1" />
                   Full Name
                 </label>
                 <input
+                  id="contactName"
                   type="text"
                   value={formData.contactName}
                   onChange={(e) => handleInputChange('contactName', e.target.value)}
@@ -269,10 +408,11 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
+                  id="contactEmail"
                   type="email"
                   value={formData.contactEmail}
                   onChange={(e) => handleInputChange('contactEmail', e.target.value)}
@@ -283,10 +423,11 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number
                 </label>
                 <input
+                  id="contactPhone"
                   type="tel"
                   value={formData.contactPhone}
                   onChange={(e) => handleInputChange('contactPhone', e.target.value)}
@@ -297,10 +438,11 @@ const RequirementForm = ({ isOpen, onClose, category }: RequirementFormProps) =>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="specialRequests" className="block text-sm font-medium text-gray-700 mb-2">
                   Special Requests
                 </label>
                 <textarea
+                  id="specialRequests"
                   value={formData.specialRequests}
                   onChange={(e) => handleInputChange('specialRequests', e.target.value)}
                   placeholder="Any special requirements, preferences, or additional information"

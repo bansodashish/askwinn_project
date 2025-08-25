@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Send, Bot, User } from 'lucide-react'
 import type { RequirementCategory } from '../App'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 interface ChatbotProps {
   isOpen: boolean
@@ -20,12 +21,84 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
     {
       id: '1',
       type: 'bot',
-      content: `Hi! I'm your AI assistant for ${category} requirements. I'm here to help you find the perfect attire. What kind of event are you planning for?`,
+      content: `Hi! I'm your AI assistant powered by Gemini 2.0 Flash for ${category} requirements. I'm here to help you find the perfect attire. What kind of event are you planning for?`,
       timestamp: new Date()
     }
   ])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+
+  // Initialize Gemini AI
+  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+
+  const getSystemPrompt = (category: RequirementCategory) => {
+    const basePrompt = `You are an expert AI assistant for Askwinn, a premium ${category} attire consultation platform. You specialize in helping customers find perfect clothing and styling solutions.`
+    
+    switch (category) {
+      case 'wedding':
+        return `${basePrompt}
+
+SPECIALIZATION: Wedding attire expert for brides and grooms
+EXPERTISE: Wedding dresses, suits, accessories, styling, venue-appropriate choices
+TONE: Warm, enthusiastic, knowledgeable, romantic but professional
+
+KEY AREAS:
+- Bridal gowns (traditional, modern, vintage, bohemian styles)
+- Groom's attire (tuxedos, suits, traditional wear)
+- Wedding party coordination
+- Venue-appropriate styling (indoor/outdoor, beach, garden, church)
+- Seasonal considerations
+- Budget-conscious recommendations
+- Cultural and religious requirements
+
+APPROACH:
+- Ask clarifying questions about venue, season, style preferences
+- Provide specific brand and style recommendations
+- Consider budget constraints
+- Suggest coordinating accessories
+- Offer styling tips for the complete look
+- Be encouraging and help make their special day perfect
+
+Always end responses with helpful follow-up questions to gather more details for better recommendations.`
+
+      case 'party':
+        return `${basePrompt}
+
+SPECIALIZATION: Party and event attire expert
+EXPERTISE: Cocktail dresses, formal wear, party outfits, occasion styling
+TONE: Fun, stylish, trendy, confident
+
+KEY AREAS:
+- Cocktail and party dresses
+- Formal evening wear
+- Smart casual outfits
+- Anniversary and celebration attire
+- Age-appropriate styling
+- Trend-conscious recommendations
+- Versatile pieces for multiple occasions
+
+Always suggest complete looks including accessories and provide styling tips.`
+
+      default:
+        return `${basePrompt}
+
+SPECIALIZATION: Professional and corporate attire expert
+EXPERTISE: Business suits, formal wear, interview outfits, workplace styling
+TONE: Professional, confident, polished
+
+KEY AREAS:
+- Business professional attire
+- Interview outfits
+- Conference and meeting wear
+- Corporate event styling
+- Industry-specific dress codes
+- Professional accessories
+- Versatile wardrobe building
+
+Focus on building a professional image while maintaining personal style.`
+    }
+  }
 
   const getWelcomeQuestions = (category: RequirementCategory) => {
     switch (category) {
@@ -55,28 +128,43 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
 
   const quickQuestions = getWelcomeQuestions(category)
 
-  const generateBotResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase()
-    
-    if (category === 'wedding') {
-      if (lowerMessage.includes('date') || lowerMessage.includes('when')) {
-        return "Great! Knowing your wedding date helps me recommend seasonal appropriate attire. Do you have a specific style in mind - classic, modern, bohemian, or vintage?"
-      }
-      if (lowerMessage.includes('style') || lowerMessage.includes('classic') || lowerMessage.includes('modern')) {
-        return "Excellent choice! For the bride, are you looking for a traditional gown, something more contemporary, or perhaps a fusion style? And for the groom, would you prefer a classic tuxedo or a more modern suit?"
-      }
-      if (lowerMessage.includes('budget')) {
-        return "Understanding your budget helps me find the best options. I can work with any range. Would you also like me to coordinate matching accessories and styling for both bride and groom?"
-      }
-      if (lowerMessage.includes('indoor') || lowerMessage.includes('outdoor')) {
-        return "Perfect! The venue type definitely influences the style recommendations. Would you like me to create a complete requirement form based on our conversation so far?"
-      }
+  const generateBotResponse = async (userMessage: string): Promise<string> => {
+    try {
+      const systemPrompt = getSystemPrompt(category)
+      
+      // Build conversation history for context
+      const conversationHistory = messages
+        .slice(1) // Skip the initial bot welcome message
+        .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n')
+      
+      const fullPrompt = `${systemPrompt}
+
+CONVERSATION HISTORY:
+${conversationHistory}
+
+USER MESSAGE: ${userMessage}
+
+INSTRUCTIONS:
+- Provide helpful, specific advice about ${category} attire
+- Ask relevant follow-up questions to better understand their needs
+- Keep responses conversational but informative
+- Suggest specific styles, brands, or options when appropriate
+- Consider budget, venue, season, and personal style
+- Maximum 150 words per response
+
+RESPONSE:`
+
+      const result = await model.generateContent(fullPrompt)
+      const response = result.response
+      return response.text()
+    } catch (error) {
+      console.error('Gemini AI Error:', error)
+      return "I apologize, but I'm having trouble connecting to my AI brain right now. Could you please try asking your question again? I'm here to help you find the perfect attire!"
     }
-    
-    return "That's helpful information! Based on what you've shared, I can create a personalized requirement form. Would you like me to generate a detailed form with your preferences, or do you have more specific questions about styles and options?"
   }
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -87,23 +175,36 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentInput = inputValue
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      // Get AI response
+      const botResponseText = await generateBotResponse(currentInput)
+      
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: generateBotResponse(inputValue),
+        content: botResponseText,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, botResponse])
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error)
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorResponse])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -114,16 +215,28 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
     setMessages(prev => [...prev, userMessage])
     setIsTyping(true)
 
-    setTimeout(() => {
+    try {
+      const botResponseText = await generateBotResponse(question)
+      
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
-        content: generateBotResponse(question),
+        content: botResponseText,
         timestamp: new Date()
       }
       setMessages(prev => [...prev, botResponse])
+    } catch (error) {
+      console.error('Error in handleQuickQuestion:', error)
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: "I apologize, but I'm having trouble processing your question right now. Could you please try again?",
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorResponse])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   if (!isOpen) return null
@@ -231,7 +344,7 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Type your message..."
               className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
