@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Send, Bot, User } from 'lucide-react'
 import type { RequirementCategory } from '../App'
 import { GoogleGenerativeAI } from '@google/generative-ai'
@@ -28,9 +28,30 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
 
-  // Initialize Gemini AI
-  const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+  // Initialize Gemini AI with error handling
+  let genAI: GoogleGenerativeAI
+  let model: any
+  
+  try {
+    genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+    model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+  } catch (error) {
+    console.error('Failed to initialize Gemini AI:', error)
+  }
+
+  // Debug function for input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    console.log('Input changing to:', value) // Debug log
+    setInputValue(value)
+  }
+
+  // Debug when chatbot opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Chatbot opened, ready for input')
+    }
+  }, [isOpen])
 
   const getSystemPrompt = (category: RequirementCategory) => {
     const basePrompt = `You are an expert AI assistant for Askwinn, a premium ${category} attire consultation platform. You specialize in helping customers find perfect clothing and styling solutions.`
@@ -130,6 +151,11 @@ Focus on building a professional image while maintaining personal style.`
 
   const generateBotResponse = async (userMessage: string): Promise<string> => {
     try {
+      // Check if model is available
+      if (!model) {
+        return "I'm having trouble connecting to my AI brain right now, but I'm still here to help! Could you tell me more about what you're looking for?"
+      }
+
       const systemPrompt = getSystemPrompt(category)
       
       // Build conversation history for context
@@ -160,7 +186,16 @@ RESPONSE:`
       return response.text()
     } catch (error) {
       console.error('Gemini AI Error:', error)
-      return "I apologize, but I'm having trouble connecting to my AI brain right now. Could you please try asking your question again? I'm here to help you find the perfect attire!"
+      
+      // Fallback responses based on category
+      const fallbackResponses: Record<RequirementCategory, string> = {
+        wedding: "I'd love to help you find the perfect wedding attire! Could you tell me about your wedding date, venue type (indoor/outdoor), and style preferences? This will help me give you better recommendations.",
+        party: "Great! I'm here to help with party attire. What type of event are you attending? Is it formal, casual, or somewhere in between? And what's the time of day?",
+        corporate: "I can definitely help with professional attire! Are you looking for everyday business wear, interview outfits, or special corporate event attire? What's your industry?",
+        casual: "I'm here to help with casual attire! What's the occasion you're dressing for? Is it a casual day out, weekend plans, or something specific?"
+      }
+      
+      return fallbackResponses[category] || "I apologize, but I'm having trouble connecting to my AI brain right now. Could you please try asking your question again? I'm here to help you find the perfect attire!"
     }
   }
 
@@ -339,18 +374,30 @@ RESPONSE:`
 
         {/* Input */}
         <div className="p-4 border-t border-gray-200">
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 mb-2">
+            Debug: Input value = "{inputValue}" | Typing: {isTyping ? 'Yes' : 'No'}
+          </div>
           <div className="flex space-x-2">
             <input
               type="text"
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendMessage()
+                }
+              }}
               placeholder="Type your message..."
-              className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isTyping}
+              className="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+              autoComplete="off"
+              autoFocus
             />
             <button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isTyping}
               className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white p-2 rounded-xl transition-colors"
             >
               <Send className="w-4 h-4" />
