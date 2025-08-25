@@ -1,0 +1,50 @@
+/* Custom styles for the Askwinn app */
+.app-container {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Smooth transitions for theme changes */
+.theme-transition {
+  transition: background 1s ease-in-out;
+}
+
+/* Additional utility classes */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.backdrop-blur {
+  backdrop-filter: blur(10px);
+}
+
+/* Animation for floating elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
