@@ -21,7 +21,7 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
     {
       id: '1',
       type: 'bot',
-      content: `Hi! I'm your AI assistant powered by Gemini 2.0 Flash for ${category} requirements. I'm here to help you find the perfect attire. What kind of event are you planning for?`,
+      content: `Hi! I'm your AI assistant powered by Gemini 2.0 Flash. I'm here to help you with any questions or tasks you have. How can I assist you today?`,
       timestamp: new Date()
     }
   ])
@@ -39,115 +39,51 @@ const Chatbot = ({ isOpen, onClose, category }: ChatbotProps) => {
     console.error('Failed to initialize Gemini AI:', error)
   }
 
-  // Debug function for input changes
+  // Input change handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    console.log('Input changing to:', value) // Debug log
     setInputValue(value)
   }
 
-  // Debug when chatbot opens
+  // Debug when chatbot opens (remove in production)
   useEffect(() => {
     if (isOpen) {
-      console.log('Chatbot opened, ready for input')
+      // Component is ready
     }
   }, [isOpen])
 
-  const getSystemPrompt = (category: RequirementCategory) => {
-    const basePrompt = `You are an expert AI assistant for Askwinn, a premium ${category} attire consultation platform. You specialize in helping customers find perfect clothing and styling solutions.`
-    
-    switch (category) {
-      case 'wedding':
-        return `${basePrompt}
+  const getSystemPrompt = () => {
+    return `You are a helpful AI assistant powered by Gemini 2.0 Flash. You can assist with a wide variety of topics and questions.
 
-SPECIALIZATION: Wedding attire expert for brides and grooms
-EXPERTISE: Wedding dresses, suits, accessories, styling, venue-appropriate choices
-TONE: Warm, enthusiastic, knowledgeable, romantic but professional
-
-KEY AREAS:
-- Bridal gowns (traditional, modern, vintage, bohemian styles)
-- Groom's attire (tuxedos, suits, traditional wear)
-- Wedding party coordination
-- Venue-appropriate styling (indoor/outdoor, beach, garden, church)
-- Seasonal considerations
-- Budget-conscious recommendations
-- Cultural and religious requirements
+CORE CAPABILITIES:
+- Answer general questions on any topic
+- Provide helpful advice and recommendations
+- Assist with problem-solving and decision-making
+- Offer creative ideas and suggestions
+- Help with planning and organization
+- Provide information and explanations
 
 APPROACH:
-- Ask clarifying questions about venue, season, style preferences
-- Provide specific brand and style recommendations
-- Consider budget constraints
-- Suggest coordinating accessories
-- Offer styling tips for the complete look
-- Be encouraging and help make their special day perfect
+- Be friendly, helpful, and knowledgeable
+- Ask clarifying questions when needed
+- Provide specific, actionable advice
+- Be concise but thorough in responses
+- Adapt your communication style to the user's needs
+- Offer follow-up suggestions when appropriate
 
-Always end responses with helpful follow-up questions to gather more details for better recommendations.`
-
-      case 'party':
-        return `${basePrompt}
-
-SPECIALIZATION: Party and event attire expert
-EXPERTISE: Cocktail dresses, formal wear, party outfits, occasion styling
-TONE: Fun, stylish, trendy, confident
-
-KEY AREAS:
-- Cocktail and party dresses
-- Formal evening wear
-- Smart casual outfits
-- Anniversary and celebration attire
-- Age-appropriate styling
-- Trend-conscious recommendations
-- Versatile pieces for multiple occasions
-
-Always suggest complete looks including accessories and provide styling tips.`
-
-      default:
-        return `${basePrompt}
-
-SPECIALIZATION: Professional and corporate attire expert
-EXPERTISE: Business suits, formal wear, interview outfits, workplace styling
-TONE: Professional, confident, polished
-
-KEY AREAS:
-- Business professional attire
-- Interview outfits
-- Conference and meeting wear
-- Corporate event styling
-- Industry-specific dress codes
-- Professional accessories
-- Versatile wardrobe building
-
-Focus on building a professional image while maintaining personal style.`
-    }
+You can help with anything from everyday questions to complex problems. Feel free to engage naturally and helpfully with whatever the user needs assistance with.`
   }
 
-  const getWelcomeQuestions = (category: RequirementCategory) => {
-    switch (category) {
-      case 'wedding':
-        return [
-          "What's your wedding date?",
-          "What's your preferred style?",
-          "What's your budget range?",
-          "Indoor or outdoor ceremony?"
-        ]
-      case 'party':
-        return [
-          "What type of party?",
-          "What's the dress code?",
-          "Daytime or evening?",
-          "What's your style preference?"
-        ]
-      default:
-        return [
-          "Tell me about your event",
-          "What's your style preference?",
-          "What's your budget?",
-          "Any specific requirements?"
-        ]
-    }
+  const getWelcomeQuestions = () => {
+    return [
+      "How can you help me?",
+      "What can I ask you?",
+      "Tell me about yourself",
+      "What are your capabilities?"
+    ]
   }
 
-  const quickQuestions = getWelcomeQuestions(category)
+  const quickQuestions = getWelcomeQuestions()
 
   const generateBotResponse = async (userMessage: string): Promise<string> => {
     try {
@@ -156,7 +92,7 @@ Focus on building a professional image while maintaining personal style.`
         return "I'm having trouble connecting to my AI brain right now, but I'm still here to help! Could you tell me more about what you're looking for?"
       }
 
-      const systemPrompt = getSystemPrompt(category)
+      const systemPrompt = getSystemPrompt()
       
       // Build conversation history for context
       const conversationHistory = messages
@@ -172,12 +108,12 @@ ${conversationHistory}
 USER MESSAGE: ${userMessage}
 
 INSTRUCTIONS:
-- Provide helpful, specific advice about ${category} attire
-- Ask relevant follow-up questions to better understand their needs
+- Provide helpful, accurate, and relevant responses
+- Ask clarifying questions when needed to better understand the user's needs
 - Keep responses conversational but informative
-- Suggest specific styles, brands, or options when appropriate
-- Consider budget, venue, season, and personal style
-- Maximum 150 words per response
+- Be specific and actionable in your advice
+- Adapt your response style to match the user's question
+- Maximum 150 words per response for better readability
 
 RESPONSE:`
 
@@ -187,15 +123,15 @@ RESPONSE:`
     } catch (error) {
       console.error('Gemini AI Error:', error)
       
-      // Fallback responses based on category
+      // Fallback responses if AI is unavailable
       const fallbackResponses: Record<RequirementCategory, string> = {
-        wedding: "I'd love to help you find the perfect wedding attire! Could you tell me about your wedding date, venue type (indoor/outdoor), and style preferences? This will help me give you better recommendations.",
-        party: "Great! I'm here to help with party attire. What type of event are you attending? Is it formal, casual, or somewhere in between? And what's the time of day?",
-        corporate: "I can definitely help with professional attire! Are you looking for everyday business wear, interview outfits, or special corporate event attire? What's your industry?",
-        casual: "I'm here to help with casual attire! What's the occasion you're dressing for? Is it a casual day out, weekend plans, or something specific?"
+        wedding: "I'm here to help! What would you like to know or discuss today?",
+        party: "I'm here to help! What would you like to know or discuss today?",
+        corporate: "I'm here to help! What would you like to know or discuss today?",
+        casual: "I'm here to help! What would you like to know or discuss today?"
       }
       
-      return fallbackResponses[category] || "I apologize, but I'm having trouble connecting to my AI brain right now. Could you please try asking your question again? I'm here to help you find the perfect attire!"
+      return fallbackResponses[category] || "I apologize, but I'm having trouble connecting right now. Could you please try asking your question again? I'm here to help with whatever you need!"
     }
   }
 
@@ -374,10 +310,6 @@ RESPONSE:`
 
         {/* Input */}
         <div className="p-4 border-t border-gray-200">
-          {/* Debug info */}
-          <div className="text-xs text-gray-500 mb-2">
-            Debug: Input value = "{inputValue}" | Typing: {isTyping ? 'Yes' : 'No'}
-          </div>
           <div className="flex space-x-2">
             <input
               type="text"
