@@ -15,7 +15,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-wedding-600 hover:bg-wedding-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
   
   .btn-secondary {
@@ -27,11 +27,43 @@
   }
   
   .gradient-wedding {
-    @apply bg-gradient-to-br from-wedding-900 via-wedding-800 to-wedding-900;
+    background: linear-gradient(135deg, 
+      #833434 0%,     /* Deep burgundy */
+      #977161 25%,    /* Brown */
+      #e69593 50%,    /* Coral pink */
+      #dbb098 75%,    /* Warm beige */
+      #acbc6c 100%    /* Sage green */
+    );
+    position: relative;
+  }
+  
+  .gradient-wedding::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(230, 149, 147, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(219, 176, 152, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(172, 188, 108, 0.2) 0%, transparent 50%);
+    opacity: 0.6;
+    pointer-events: none;
   }
   
   .floating-animation {
     animation: float 6s ease-in-out infinite;
+  }
+  
+  .petal-bg {
+    background-image: 
+      radial-gradient(ellipse 20px 10px at 50% 50%, rgba(230, 149, 147, 0.1) 0%, transparent 70%),
+      radial-gradient(ellipse 15px 8px at 30% 70%, rgba(219, 176, 152, 0.1) 0%, transparent 70%),
+      radial-gradient(ellipse 18px 12px at 70% 30%, rgba(172, 188, 108, 0.1) 0%, transparent 70%);
+    background-size: 100px 100px, 80px 80px, 120px 120px;
+    background-position: 0 0, 40px 60px, 80px 20px;
+    animation: petals 20s linear infinite;
   }
 }
 
@@ -44,6 +76,33 @@
   }
 }
 
+@keyframes petals {
+  0% {
+    background-position: 0 0, 40px 60px, 80px 20px;
+  }
+  100% {
+    background-position: 100px 100px, 140px 160px, 180px 120px;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .text-glow {
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  text-shadow: 0 0 20px rgba(230, 149, 147, 0.8), 0 0 40px rgba(219, 176, 152, 0.6);
+}
+
+.romantic-glow {
+  box-shadow: 
+    0 0 30px rgba(230, 149, 147, 0.3),
+    0 0 60px rgba(219, 176, 152, 0.2),
+    inset 0 0 30px rgba(255, 255, 255, 0.1);
 }

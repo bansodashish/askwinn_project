@@ -44,27 +44,50 @@ const Hero = ({ currentCategory, onStartChat, onShowForm }: HeroProps) => {
   const content = getCategoryContent(currentCategory)
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <section className={`relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 ${currentCategory === 'wedding' ? 'petal-bg' : ''}`}>
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-32 w-80 h-80 bg-white/5 rounded-full blur-3xl floating-animation"></div>
-        <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-white/5 rounded-full blur-3xl floating-animation" style={{ animationDelay: '2s' }}></div>
+        {currentCategory === 'wedding' ? (
+          <>
+            {/* Romantic floating elements for wedding */}
+            <div className="absolute -top-40 -right-32 w-80 h-80 bg-wedding-300/20 rounded-full blur-3xl floating-animation"></div>
+            <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-wedding-400/20 rounded-full blur-3xl floating-animation" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute top-1/4 left-1/4 w-60 h-60 bg-wedding-500/10 rounded-full blur-2xl floating-animation" style={{ animationDelay: '4s' }}></div>
+            {/* Soft overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40"></div>
+          </>
+        ) : (
+          <>
+            <div className="absolute -top-40 -right-32 w-80 h-80 bg-white/5 rounded-full blur-3xl floating-animation"></div>
+            <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-white/5 rounded-full blur-3xl floating-animation" style={{ animationDelay: '2s' }}></div>
+          </>
+        )}
       </div>
 
       <div className="relative max-w-7xl mx-auto">
         <div className="text-center">
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
-            <Sparkles className="w-4 h-4 text-yellow-400" />
+          <div className={`inline-flex items-center space-x-2 backdrop-blur-sm border rounded-full px-4 py-2 mb-8 ${
+            currentCategory === 'wedding' 
+              ? 'bg-wedding-200/20 border-wedding-300/30 romantic-glow' 
+              : 'bg-white/10 border-white/20'
+          }`}>
+            <Sparkles className={`w-4 h-4 ${currentCategory === 'wedding' ? 'text-wedding-300' : 'text-yellow-400'}`} />
             <span className="text-sm font-medium text-white">NEW GEN AI AUTOMATION PARTNER</span>
           </div>
 
           {/* Main Heading */}
           <div className="space-y-4 mb-8">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight">
+            <h1 className={`text-4xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight ${
+              currentCategory === 'wedding' ? 'text-glow' : ''
+            }`}>
               Automate Smarter. Grow
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+              <span className={`text-transparent bg-clip-text ${
+                currentCategory === 'wedding' 
+                  ? 'bg-gradient-to-r from-wedding-300 via-wedding-400 to-wedding-500'
+                  : 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400'
+              }`}>
                 Faster.
               </span>
               <span className="italic text-gray-300 text-3xl sm:text-5xl lg:text-6xl block mt-2">
@@ -90,7 +113,11 @@ const Hero = ({ currentCategory, onStartChat, onShowForm }: HeroProps) => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <button 
               onClick={onStartChat}
-              className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+              className={`group font-semibold py-4 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 ${
+                currentCategory === 'wedding'
+                  ? 'bg-gradient-to-r from-wedding-600 to-wedding-700 hover:from-wedding-700 hover:to-wedding-800 text-white romantic-glow'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+              }`}
             >
               <MessageCircle className="w-5 h-5" />
               <span>Start AI Chat</span>
@@ -99,7 +126,11 @@ const Hero = ({ currentCategory, onStartChat, onShowForm }: HeroProps) => {
             
             <button 
               onClick={onShowForm}
-              className="group bg-white/10 hover:bg-white/20 text-white font-semibold py-4 px-8 rounded-lg border border-white/20 hover:border-white/40 transition-all duration-300 flex items-center space-x-2"
+              className={`group font-semibold py-4 px-8 rounded-lg transition-all duration-300 flex items-center space-x-2 ${
+                currentCategory === 'wedding'
+                  ? 'bg-wedding-200/10 hover:bg-wedding-200/20 text-white border border-wedding-300/40 hover:border-wedding-300/60'
+                  : 'bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40'
+              }`}
             >
               <FileText className="w-5 h-5" />
               <span>Fill Requirements Form</span>
@@ -108,25 +139,55 @@ const Hero = ({ currentCategory, onStartChat, onShowForm }: HeroProps) => {
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <MessageCircle className="w-6 h-6 text-blue-400" />
+            <div className={`backdrop-blur-sm border rounded-xl p-6 transition-all duration-300 ${
+              currentCategory === 'wedding'
+                ? 'bg-wedding-200/5 border-wedding-300/20 hover:bg-wedding-200/10 romantic-glow'
+                : 'bg-white/5 border-white/10 hover:bg-white/10'
+            }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 mx-auto ${
+                currentCategory === 'wedding'
+                  ? 'bg-wedding-500/20'
+                  : 'bg-blue-500/20'
+              }`}>
+                <MessageCircle className={`w-6 h-6 ${
+                  currentCategory === 'wedding' ? 'text-wedding-300' : 'text-blue-400'
+                }`} />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">AI Chatbot</h3>
               <p className="text-gray-300 text-sm">Intelligent conversation to understand your exact requirements</p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <FileText className="w-6 h-6 text-purple-400" />
+            <div className={`backdrop-blur-sm border rounded-xl p-6 transition-all duration-300 ${
+              currentCategory === 'wedding'
+                ? 'bg-wedding-200/5 border-wedding-300/20 hover:bg-wedding-200/10 romantic-glow'
+                : 'bg-white/5 border-white/10 hover:bg-white/10'
+            }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 mx-auto ${
+                currentCategory === 'wedding'
+                  ? 'bg-wedding-600/20'
+                  : 'bg-purple-500/20'
+              }`}>
+                <FileText className={`w-6 h-6 ${
+                  currentCategory === 'wedding' ? 'text-wedding-400' : 'text-purple-400'
+                }`} />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Smart Forms</h3>
               <p className="text-gray-300 text-sm">Dynamic forms that adapt based on your preferences</p>
             </div>
             
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300">
-              <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <Sparkles className="w-6 h-6 text-pink-400" />
+            <div className={`backdrop-blur-sm border rounded-xl p-6 transition-all duration-300 ${
+              currentCategory === 'wedding'
+                ? 'bg-wedding-200/5 border-wedding-300/20 hover:bg-wedding-200/10 romantic-glow'
+                : 'bg-white/5 border-white/10 hover:bg-white/10'
+            }`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 mx-auto ${
+                currentCategory === 'wedding'
+                  ? 'bg-wedding-700/20'
+                  : 'bg-pink-500/20'
+              }`}>
+                <Sparkles className={`w-6 h-6 ${
+                  currentCategory === 'wedding' ? 'text-wedding-500' : 'text-pink-400'
+                }`} />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Automation</h3>
               <p className="text-gray-300 text-sm">Automated matching and recommendations powered by AI</p>
